@@ -31,98 +31,126 @@ namespace Volxyseat.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var allSubscriptions = await _subscriptionRepository.GetAll();
-
-            if (allSubscriptions == null)
+            try
             {
-                return NotFound("Planos não encontrados");
+                var allSubscriptions = await _subscriptionRepository.GetAll();
+
+                if (allSubscriptions == null)
+                {
+                    return NotFound("Planos não encontrados");
+                }
+
+                var activeSubscriptions = allSubscriptions.Where(subscription => subscription.IsActive == true).ToList();
+
+                if (activeSubscriptions.Count == 0)
+                {
+                    return NotFound("Nenhum plano ativo encontrado");
+                }
+
+                return Ok(allSubscriptions);
             }
-
-            var activeSubscriptions = allSubscriptions.Where(subscription => subscription.IsActive == true).ToList();
-
-            if (activeSubscriptions.Count == 0)
+            catch (Exception ex)
             {
-                return NotFound("Nenhum plano ativo encontrado");
+                return StatusCode(500, $"Erro interno do servidor: {ex.Message}");
             }
-
-            return Ok(allSubscriptions);
         }
 
         [HttpGet("{Id}")]
         public async Task<IActionResult> GetById(Guid Id)
         {
-            var subscriptionClient = await _subscriptionRepository.GetById(Id);
-            if (subscriptionClient == null)
+            try
             {
-                return NotFound("Esse plano não foi encontrado");
-            }
+                var subscriptionClient = await _subscriptionRepository.GetById(Id);
+                if (subscriptionClient == null)
+                {
+                    return NotFound("Esse plano não foi encontrado");
+                }
 
-            return Ok(subscriptionClient);
+                return Ok(subscriptionClient);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erro interno do servidor: {ex.Message}");
+            }
         }
 
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> Add([FromBody] SubscriptionViewModel request)
         {
-            if (request == null)
+            try
             {
-                return BadRequest("O objeto de solicitação é nulo.");
+                if (request == null)
+                {
+                    return BadRequest("O objeto de solicitação é nulo.");
+                }
+
+                var map = _mapper.Map<Subscription>(request);
+                _subscriptionRepository.Add(map);
+                await _uow.SaveChangesAsync();
+
+                var responseViewModel = _mapper.Map<SubscriptionViewModel>(map);
+                return Ok(responseViewModel);
             }
-
-            var map = _mapper.Map<Subscription>(request);
-            _subscriptionRepository.Add(map);
-            await _uow.SaveChangesAsync();
-
-            var responseViewModel = _mapper.Map<SubscriptionViewModel>(map);
-            return Ok(responseViewModel);
-
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erro interno do servidor: {ex.Message}");
+            }
         }
 
         [HttpPut]
         [Authorize]
         public async Task<IActionResult> Put([FromBody] SubscriptionViewModel request)
         {
-            var existingSubscription = await _subscriptionRepository.GetById(request.Id);
-
-            if (request.Id != existingSubscription.Id)
+            try
             {
-                return BadRequest();
+                var existingSubscription = await _subscriptionRepository.GetById(request.Id);
+
+                if (request.Id != existingSubscription.Id)
+                {
+                    return BadRequest("O ID da solicitação não corresponde ao ID existente.");
+                }
+
+                existingSubscription.Type = request.Type;
+                existingSubscription.Price = request.Price;
+                existingSubscription.Description = request.Description;
+                existingSubscription.IsActive = request.IsActive;
+                existingSubscription.TermInDays = request.TermInDays;
+
+                _subscriptionRepository.Update(existingSubscription);
+                await _uow.SaveChangesAsync();
+
+                return Ok(existingSubscription);
             }
-
-            existingSubscription.Type = request.Type;
-            existingSubscription.Price = request.Price;
-            existingSubscription.Description = request.Description;
-            existingSubscription.IsActive = request.IsActive;
-            existingSubscription.TermInDays = request.TermInDays;
-
-            _subscriptionRepository.Update(existingSubscription);
-            await _uow.SaveChangesAsync();
-
-            return Ok(existingSubscription);
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erro interno do servidor: {ex.Message}");
+            }
         }
 
         [HttpPut("{Id}")]
         [Authorize]
         public async Task<IActionResult> switchSubscription(Guid Id)
         {
-            var existingSubscription = await _subscriptionRepository.GetById(Id);
-            if(Id != existingSubscription.Id)
+            try
             {
-                return BadRequest();
-            }
+                var existingSubscription = await _subscriptionRepository.GetById(Id);
+                if (Id != existingSubscription.Id)
+                {
+                    return BadRequest("O ID da solicitação não corresponde ao ID existente.");
+                }
 
-            if (!existingSubscription.IsActive)
-            {
-                existingSubscription.IsActive = true;
-            }
-            else
-            {
-                existingSubscription.IsActive = false;
-            }
-            _subscriptionRepository.SwitchSubscription(existingSubscription);
-            await _uow.SaveChangesAsync();
+                existingSubscription.IsActive = !existingSubscription.IsActive;
 
-            return Ok(existingSubscription);
+                _subscriptionRepository.SwitchSubscription(existingSubscription);
+                await _uow.SaveChangesAsync();
+
+                return Ok(existingSubscription);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erro interno do servidor: {ex.Message}");
+            }
         }
     }
 }

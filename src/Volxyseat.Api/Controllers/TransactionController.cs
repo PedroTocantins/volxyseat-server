@@ -28,15 +28,23 @@ namespace Volxyseat.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var allSubscriptions = await _transactionRepository.GetAll();
-
-            if (allSubscriptions == null)
+            try
             {
-                return NotFound();
-            }
+                var allSubscriptions = await _transactionRepository.GetAll();
 
-            return Ok(allSubscriptions);
+                if (allSubscriptions == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(allSubscriptions);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erro interno do servidor: {ex.Message}");
+            }
         }
+
 
         [HttpGet("{Id}")]
         public async Task<IActionResult> GetById(Guid Id)
@@ -57,25 +65,29 @@ namespace Volxyseat.Api.Controllers
                 return BadRequest(ex);
             }
         }
-        
+
 
         [HttpPost]
         public async Task<IActionResult> Add([FromBody] TransactionViewModel request)
         {
-            if (request == null)
+            try
             {
-                return BadRequest("O objeto de solicitação é nulo.");
+                if (request == null)
+                {
+                    return BadRequest("O objeto de solicitação é nulo.");
+                }
+
+                var map = _mapper.Map<TransactionModel>(request);
+                _transactionRepository.Add(map);
+                await _uow.SaveChangesAsync();
+
+                return Ok(map);
             }
-
-            var map = _mapper.Map<TransactionModel>(request);
-            _transactionRepository.Add(map);
-            await _uow.SaveChangesAsync();
-
-
-            //var responseViewModel = _mapper.Map<TransactionViewModel>(map);
-
-            return Ok(map);
-
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erro interno do servidor: {ex.Message}");
+            }
         }
+
     }
 }
