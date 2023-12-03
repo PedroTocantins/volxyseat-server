@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Volxyseat.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Volxyseat.Domain.Models.Transaction;
 
 namespace Volxyseat.Api.Controllers
 {
@@ -100,7 +101,7 @@ namespace Volxyseat.Api.Controllers
 
         [HttpPut]
         [Authorize]
-        public async Task<IActionResult> Put([FromBody] SubscriptionViewModel request)
+        public async Task<IActionResult> Put([FromBody]SubscriptionViewModel request )
         {
             try
             {
@@ -111,13 +112,9 @@ namespace Volxyseat.Api.Controllers
                     return BadRequest("O ID da solicitação não corresponde ao ID existente.");
                 }
 
-                existingSubscription.Type = request.Type;
-                existingSubscription.Price = request.Price;
-                existingSubscription.Description = request.Description;
-                existingSubscription.IsActive = request.IsActive;
-                existingSubscription.TermInDays = request.TermInDays;
+                var map = _mapper.Map<Subscription>(request);
 
-                _subscriptionRepository.Update(existingSubscription);
+                _subscriptionRepository.Update(map);
                 await _uow.SaveChangesAsync();
 
                 return Ok(existingSubscription);

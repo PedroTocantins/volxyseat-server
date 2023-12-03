@@ -11,8 +11,8 @@ using Volxyseat.Infrastructure.Data;
 namespace Volxyseat.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDataContext))]
-    [Migration("20231130185652_First")]
-    partial class First
+    [Migration("20231203173006_fixMigration")]
+    partial class fixMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -228,9 +228,6 @@ namespace Volxyseat.Infrastructure.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("IssueDate")
-                        .HasColumnType("TEXT");
 
                     b.Property<double>("Price")
                         .HasColumnType("REAL");
