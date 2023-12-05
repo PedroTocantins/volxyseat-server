@@ -5,11 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Volxyseat.Domain.Core.Data;
+using Volxyseat.Domain.Models.BaseModel;
 using Volxyseat.Infrastructure.Data;
 
 namespace Volxyseat.Infrastructure.Repository
 {
-    public class RepositoryBase<TEntity, TKey> : IRepository<TEntity, TKey> where TEntity : class
+    public class RepositoryBase<TEntity, TKey> : IRepository<TEntity, TKey> where TEntity : Base
     {
         protected readonly ApplicationDataContext _applicationDataContext;
         protected readonly DbSet<TEntity> _entity;

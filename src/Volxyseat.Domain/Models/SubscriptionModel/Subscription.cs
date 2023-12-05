@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Volxyseat.Domain.Models.BaseModel;
 
 namespace Volxyseat.Domain.Models.SubscriptionModel
 {
-    public class Subscription
+    public class Subscription : Base
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
         public string Type { get; set; }
         public string Description { get; set; }
         public double Price { get; set; }
